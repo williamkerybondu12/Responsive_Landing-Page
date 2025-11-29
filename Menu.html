@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Interactive Fixed Navigation Menu — Demo</title>
+  <meta name="description" content="Fixed navigation that changes style on scroll and hover. Accessible, responsive, single-file demo." />
+  <style>
+    :root{
+      --nav-height: 76px;
+      --nav-height-scrolled: 56px;
+      --bg-transparent: rgba(255,255,255,0.05);
+      --bg-solid: rgba(255,255,255,0.98);
+      --accent: 40, 120, 255; /* rgb components for easier alpha usage */
+      --text-dark: #0b1220;
+      --text-light: #ffffff;
+      --glass: rgba(255,255,255,0.06);
+      --shadow: 0 6px 18px rgba(9,10,15,0.08);
+      --transition: 300ms cubic-bezier(.22,.9,.3,1);
+    }
+
+    /* Basic page layout for demo */
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    body{background:linear-gradient(180deg,#f7fbff 0%, #eef6ff 100%);color:var(--text-dark);line-height:1.45}
+
+    /* FIXED NAVIGATION */
+    nav.site-nav{
+      --current-bg: transparent;
+      position:fixed;
+      top:0;left:0;right:0;
+      height:var(--nav-height);
+      display:flex;align-items:center;justify-content:center;
+      padding:0 18px;
+      z-index:9999;
+      backdrop-filter: blur(6px) saturate(120%);
+      transition: height var(--transition), background-color var(--transition), box-shadow var(--transition), border-color var(--transition);
+      pointer-events:auto;
+    }
+
+    /* Inner container */
+    nav .container{
+      width:100%;max-width:1200px;display:flex;align-items:center;gap:20px;justify-content:space-between
+    }
+
+    /* Brand */
+    .brand:hover{color:#ff00aa;}
+    .brand:hover .logo{background:linear-gradient(90deg,#ff00aa,#00ccff);box-shadow:0 0 12px #ff00aa80;}
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+    .brand .logo{
+      width:44px;height:44px;border-radius:10px;display:inline-grid;place-items:center;font-weight:700
+    }
+    .brand .title{font-weight:600;font-size:18px}
+
+    /* Menu */
+    .menu{display:flex;gap:8px;align-items:center}
+    .menu a{
+      display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;text-decoration:none;font-weight:600;position:relative;transition:color var(--transition), transform var(--transition), background-color var(--transition);
+      color: var(--text-light); /* default (top of page) */
+    }
+
+    /* HOVER COLOR CHANGE */
+    .menu a:hover{
+      transform:translateY(-3px);
+      color:#ff00aa; /* new hover color */
+      background:linear-gradient(90deg, #ff00aa40, #00ccff40); /* gradient glow */
+      box-shadow:0 0 12px #ff00aa80;
+    }
+
+    .menu a::after{
+      content:'';position:absolute;left:12px;right:12px;bottom:8px;height:3px;border-radius:3px;transform:scaleX(0);transform-origin:left center;transition:transform var(--transition);
+      background:linear-gradient(90deg, #ff00aa, #00ccff);
+      opacity:0.95;
+    }
+    .menu a:hover::after{transform:scaleX(1)}
+
+    /* Active link */ with transform + underline */ with transform + underline */ with transform + underline */
+    .menu a::after{
+      content:'';position:absolute;left:12px;right:12px;bottom:8px;height:3px;border-radius:3px;transform:scaleX(0);transform-origin:left center;transition:transform var(--transition);
+      background:linear-gradient(90deg, rgba(var(--accent),1), rgba(var(--accent),0.6));
+      opacity:0.95;
+    }
+    .menu a:hover{transform:translateY(-3px)}
+    .menu a:hover::after{transform:scaleX(1)}
+
+    /* Active link */
+    .menu a.active{color:rgb(var(--accent));}
+    .menu a.active::after{transform:scaleX(1)}
+
+    /* Right controls (example theme toggle) */
+    .controls{display:flex;align-items:center;gap:8px}
+    .btn{border:0;background:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+
+    /* Scrolled state — switched by JS by adding .scrolled on <nav> */
+    nav.site-nav.scrolled{$1
+      animation: scrollBG 4s infinite alternate;
+    }
+    nav.site-nav.scrolled .brand .logo{transform:scale(0.88)}
+    nav.site-nav.scrolled .brand .title{font-size:16px}
+
+    /* Color inversion for scrolled state to keep contrast */
+    nav.site-nav.scrolled .menu a{color:#00aa88;} /* NEW: different scroll color */ /* NEW: scrolled color */
+    nav.site-nav .menu a{color:var(--text-light)}
+
+    /* Default top state: transparent nav with light text */
+    nav.site-nav{background:linear-gradient(180deg,var(--bg-transparent), rgba(255,255,255,0.02));}
+
+    /* Make the brand dark on scrolled state */
+    nav.site-nav.scrolled .brand .logo{background:rgb(var(--accent));color:white}
+    nav.site-nav .brand .logo{background:transparent;color:var(--text-light);border:1px solid rgba(255,255,255,0.12)}
+
+    /* Responsive: collapse into hamburger */
+    .hamburger{display:none}
+    @media (max-width:860px){
+      .menu{display:none;position:fixed;inset:auto 18px 18px 18px;padding:12px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.96),#fff);flex-direction:column;box-shadow:var(--shadow);z-index:9998}
+      .menu.open{display:flex}
+      .hamburger{display:inline-flex}
+      nav.site-nav.scrolled .menu{background:var(--bg-solid)}
+    }
+
+    /* Demo page sections */
+    main{padding-top:calc(var(--nav-height) + 22px)}
+    section{min-height:100vh;padding:48px 18px;border-bottom:1px solid rgba(9,10,15,0.03)}
+    section h2{margin-top:0}
+
+    /* Helpful small utilities */
+    .ghost{opacity:0.85}
+  
+    /* BACKGROUND ANIMATION ON SCROLL */
+    @keyframes scrollBG{
+      0%{background-color:rgba(255,255,255,0.98);}
+      50%{background-color:rgba(200,240,255,0.98);}
+      100%{background-color:rgba(180,220,255,0.98);}    }
+
+  
+    /* HOME SECTION BACKGROUND UPDATE */
+    section#home{
+      background:linear-gradient(135deg,#ff00aa30,#00ccff40,#8800ff30);
+    }
+</style>
+</head>
+<body>
+
+  <!--
+    Single-file demo of a fixed, interactive navigation menu.
+    To use this nav on every page of a multi-page site, copy the <nav class="site-nav">...</nav>
+    markup and the <style> / <script> blocks (or include them in your shared header/footer) so the nav appears
+    with the same behavior across all pages.
+  -->
+
+  <nav class="site-nav" id="siteNav" role="navigation" aria-label="Primary">
+    <div class="container">
+      <a class="brand" href="#home" id="brandLink">
+        <div class="logo" aria-hidden="true">IN</div>
+        <div class="title">SiteName</div>
+      </a>
+
+      <button class="hamburger btn" id="menuToggle" aria-expanded="false" aria-controls="primaryMenu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+
+      <div class="menu" id="primaryMenu" role="menubar">
+        <a href="#home" role="menuitem" data-target="home">Home</a>
+        <a href="#about" role="menuitem" data-target="about">About</a>
+        <a href="#services" role="menuitem" data-target="services">Services</a>
+        <a href="#pricing" role="menuitem" data-target="pricing">Pricing</a>
+        <a href="#contact" role="menuitem" data-target="contact">Contact</a>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="themeToggle" title="Toggle theme">Toggle</button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section id="home"><h2>Home</h2><p>Welcome — scroll down to watch the nav change its style. Hover over menu items to see effects. The menu is fixed and remains visible while you scroll.</p></section>
+    <section id="about"><h2>About</h2><p>About content here.</p></section>
+    <section id="services"><h2>Services</h2><p>Services details here.</p></section>
+    <section id="pricing"><h2>Pricing</h2><p>Pricing information here.</p></section>
+    <section id="contact"><h2>Contact</h2><p>Contact form, details, etc.</p></section>
+  </main>
+
+  <script>
+    (function(){
+      const nav = document.getElementById('siteNav');
+      const menu = document.getElementById('primaryMenu');
+      const toggle = document.getElementById('menuToggle');
+      const links = menu.querySelectorAll('a[data-target]');
+      const SCROLL_BREAK = 72; // px — when nav switches style
+
+      // Set scrolled class based on current scroll position
+      function handleScroll(){
+        if(window.scrollY > SCROLL_BREAK){
+          nav.classList.add('scrolled');
+        } else {
+          nav.classList.remove('scrolled');
+        }
+      }
+
+      // Toggle mobile menu
+      toggle.addEventListener('click', ()=>{
+        const isOpen = menu.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(isOpen));
+      });
+
+      // Smooth scroll for anchors and close mobile menu after selection
+      links.forEach(a=>{
+        a.addEventListener('click', (e)=>{
+          e.preventDefault();
+          const target = document.getElementById(a.dataset.target);
+          if(target){
+            const y = target.getBoundingClientRect().top + window.scrollY - (nav.offsetHeight + 12);
+            window.scrollTo({top: y, behavior: 'smooth'});
+          }
+          // close mobile menu
+          if(menu.classList.contains('open')){ menu.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
+        });
+      });
+
+      // IntersectionObserver to mark active section link
+      const observer = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          const id = entry.target.id;
+          const link = menu.querySelector('a[data-target="'+id+'"]');
+          if(entry.isIntersecting){
+            // remove active from others
+            menu.querySelectorAll('a').forEach(x=>x.classList.remove('active'));
+            if(link) link.classList.add('active');
+          }
+        });
+      },{root:null,rootMargin:'-40% 0px -40% 0px',threshold:0});
+
+      document.querySelectorAll('main section[id]').forEach(sec=>observer.observe(sec));
+
+      // Persisted style preference (e.g., user toggled theme) — small demonstration of "visible on all pages" persistence.
+      const themeToggle = document.getElementById('themeToggle');
+      const THEME_KEY = 'site-nav-theme';
+
+      function applyTheme(t){
+        if(t === 'light'){
+          document.documentElement.style.setProperty('--text-light', '#222');
+          document.documentElement.style.setProperty('--bg-solid', '#ffffff');
+        } else {
+          document.documentElement.style.setProperty('--text-light', '#ffffff');
+          document.documentElement.style.setProperty('--bg-solid', 'rgba(255,255,255,0.98)');
+        }
+      }
+
+      themeToggle.addEventListener('click', ()=>{
+        const cur = localStorage.getItem(THEME_KEY) || 'dark';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        localStorage.setItem(THEME_KEY, next);
+        applyTheme(next);
+      });
+
+      // Initialize: apply scroll check + theme from storage
+      handleScroll();
+      window.addEventListener('scroll', handleScroll, {passive:true});
+      const saved = localStorage.getItem(THEME_KEY) || 'dark';
+      applyTheme(saved);
+
+      // Accessibility: close mobile menu on Escape
+      window.addEventListener('keydown', (e)=>{
+        if(e.key === 'Escape' && menu.classList.contains('open')){
+          menu.classList.remove('open'); toggle.setAttribute('aria-expanded','false');
+        }
+      });
+
+      // If you include this nav across multiple HTML pages, the localStorage "site-nav-theme" will keep the theme preference
+      // and the nav remains position:fixed so it is visible while navigating pages. For server-side projects, consider including
+      // the same snippet into a shared header (PHP include, EJS partial, server-side include, etc.).
+
+    })();
+  </script>
+</body>
+</html>
